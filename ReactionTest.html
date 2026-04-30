@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reaction Test</title>
+  <style>
+    :root {
+      --bg: #050505;
+      --panel: rgba(255, 255, 255, 0.06);
+      --panel-border: rgba(255, 255, 255, 0.12);
+      --text: #f4f4f4;
+      --muted: #b9b9b9;
+      --accent: #ffffff;
+      --green: #2dff7a;
+      --red: #ff4d4d;
+      --shadow: 0 0 35px rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      position: relative;
+    }
+
+    canvas#particles {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 40%),
+        linear-gradient(to bottom, rgba(255,255,255,0.03), transparent 30%);
+      pointer-events: none;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 28px;
+      backdrop-filter: blur(12px);
+      background: rgba(0, 0, 0, 0.22);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand h1 {
+      font-size: 1.2rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .brand p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .small-btn {
+      border: 1px solid var(--panel-border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .small-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow);
+      border-color: rgba(255,255,255,0.25);
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .screen {
+      width: min(1100px, 100%);
+      display: none;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glass {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+      border-radius: 24px;
+    }
+
+    .hero {
+      min-height: 72vh;
+      display: grid;
+      place-items: center;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .hero-inner {
+      width: min(780px, 100%);
+      padding: 42px 24px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 14px rgba(255,255,255,0.8);
+    }
+
+    .hero h2 {
+      font-size: clamp(2.5rem, 7vw, 5.2rem);
+      line-height: 0.95;
+      margin-bottom: 18px;
+      letter-spacing: -0.05em;
+    }
+
+    .hero h2 span {
+      color: var(--accent);
+      text-shadow: 0 0 18px rgba(255,255,255,0.22);
+    }
+
+    .hero p {
+      max-width: 640px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+
+    .big-btn {
+      margin-top: 32px;
+      min-width: min(340px, 100%);
+      padding: 18px 34px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+      color: var(--text);
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.22s ease;
+      box-shadow: 0 0 0 rgba(255,255,255,0);
+    }
+
+    .big-btn:hover {
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 0 30px rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.5);
+    }
+
+    .big-btn:active {
+      transform: translateY(0) scale(0.99);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 22px;
+    }
+
+    .panel h3 {
+      font-size: 1.15rem;
+      margin-bottom: 14px;
+    }
+
+    .panel p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .game-card {
+      padding: 24px;
+    }
+
+    .status {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .status strong {
+      color: var(--text);
+    }
+
+    .arena {
+      width: 100%;
+      height: 360px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,0.06), transparent 60%),
+        rgba(255,255,255,0.03);
+    }
+
+    .target {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border: none;
+      border-radius: 18px;
+      padding: 18px 26px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.2s ease, box-shadow 0.2s ease;
+      color: #000;
+      background: #fff;
+      box-shadow: 0 0 24px rgba(255,255,255,0.25);
+      min-width: 140px;
+    }
+
+    .target:hover {
+      transform: translate(-50%, -50%) scale(1.04);
+    }
+
+    .target.waiting {
+      background: var(--red);
+      color: #fff;
+      box-shadow: 0 0 28px rgba(255,77,77,0.25);
+    }
+
+    .target.ready {
+      background: var(--green);
+      color: #000;
+      box-shadow: 0 0 28px rgba(45,255,122,0.28);
+    }
+
+    .result {
+      margin-top: 18px;
+      font-size: 1.05rem;
+      min-height: 28px;
+      color: var(--text);
+    }
+
+    .leaderboard {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .lb-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .lb-item .name {
+      font-weight: 700;
+    }
+
+    .lb-item .time {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .lb-empty {
+      color: var(--muted);
+      padding: 10px 2px;
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .arena {
+        height: 320px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      header {
+        padding: 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .hero {
+        min-height: 68vh;
+        padding: 16px;
+      }
+
+      .hero-inner {
+        padding: 28px 18px;
+      }
+
+      .big-btn {
+        width: 100%;
+        min-width: 0;
+        font-size: 1.05rem;
+      }
+
+      .panel, .game-card {
+        padding: 18px;
+      }
+
+      .arena {
+        height: 290px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  <div class="overlay"></div>
+
+  <div class="app">
+    <header>
+      <div class="brand">
+        <h1>Reaction Test</h1>
+        <p>Fast clicks. Sharp reflexes. Dark mode.</p>
+      </div>
+      <div class="top-actions">
+        <button class="small-btn" id="homeBtn">Home</button>
+        <button class="small-btn" id="gameBtn">Game</button>
+        <button class="small-btn" id="lbBtn">Leaderboard</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="homeScreen" class="screen active hero">
+        <div class="hero-inner glass">
+          <div class="eyebrow"><span class="dot"></span> built for speed</div>
+          <h2>Reaction <span>Test</span></h2>
+          <p>
+            A clean dark website with a real reaction game, particle animation, and a local leaderboard.
+            Press play, wait for green, then click as fast as you can.
+          </p>
+          <button class="big-btn" id="playBtn">Play Game</button>
+          <div class="footer-note">Best reaction times are saved in your browser.</div>
+        </div>
+      </section>
+
+      <section id="gameScreen" class="screen">
+        <div class="grid">
+          <div class="game-card glass">
+            <div class="status">
+              <div>State: <strong id="stateLabel">Ready</strong></div>
+              <div>Round: <strong id="roundLabel">0</strong></div>
+              <div>Best: <strong id="bestLabel">—</strong></div>
+            </div>
+
+            <div class="arena" id="arena">
+              <button class="target" id="targetBtn">Start</button>
+            </div>
+
+            <div class="result" id="resultText">Click Start, wait for green, then react.</div>
+
+            <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="small-btn" id="startRoundBtn">Start Round</button>
+              <button class="small-btn" id="resetBtn">Reset Score</button>
+              <button class="small-btn" id="backHomeBtn">Back Home</button>
+            </div>
+          </div>
+
+          <div class="panel glass">
+            <h3>How to play</h3>
+            <p>
+              Tap Start Round. The button turns red while you wait.
+              When it turns green, click it as quickly as possible.
+              Your time is recorded in milliseconds.
+            </p>
+            <div style="height:18px;"></div>
+            <h3>Tips</h3>
+            <p>
+              Stay focused, do not click too early, and try to climb the leaderboard.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="leaderboardScreen" class="screen">
+        <div class="glass panel">
+          <h3 style="font-size:1.5rem; margin-bottom:10px;">Leaderboard</h3>
+          <p style="margin-bottom:18px;">Top 5 reaction times saved in this browser.</p>
+          <div id="leaderboardList" class="leaderboard"></div>
+          <div style="margin-top:18px;">
+            <button class="small-btn" id="clearLbBtn">Clear Leaderboard</button>
+            <button class="small-btn" id="backFromLbBtn">Back Home</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const homeScreen = document.getElementById("homeScreen");
+    const gameScreen = document.getElementById("gameScreen");
+    const leaderboardScreen = document.getElementById("leaderboardScreen");
+
+    const playBtn = document.getElementById("playBtn");
+    const homeBtn = document.getElementById("homeBtn");
+    const gameBtn = document.getElementById("gameBtn");
+    const lbBtn = document.getElementById("lbBtn");
+    const backHomeBtn = document.getElementById("backHomeBtn");
+    const backFromLbBtn = document.getElementById("backFromLbBtn");
+
+    const startRoundBtn = document.getElementById("startRoundBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const clearLbBtn = document.getElementById("clearLbBtn");
+
+    const targetBtn = document.getElementById("targetBtn");
+    const arena = document.getElementById("arena");
+    const stateLabel = document.getElementById("stateLabel");
+    const roundLabel = document.getElementById("roundLabel");
+    const bestLabel = document.getElementById("bestLabel");
+    const resultText = document.getElementById("resultText");
+    const leaderboardList = document.getElementById("leaderboardList");
+
+    let round = 0;
+    let bestTime = null;
+    let gameState = "ready"; // ready | waiting | green
+    let waitTimer = null;
+    let startTime = null;
+    let leaderboard = loadLeaderboard();
+
+    function showScreen(screen) {
+      [homeScreen, gameScreen, leaderboardScreen].forEach(s => s.classList.remove("active"));
+      screen.classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function updateLabels() {
+      roundLabel.textContent = round;
+      bestLabel.textContent = bestTime === null ? "—" : `${bestTime} ms`;
+      stateLabel.textContent = gameState.charAt(0).toUpperCase() + gameState.slice(1);
+    }
+
+    function setTarget(text, cls) {
+      targetBtn.textContent = text;
+      targetBtn.className = `target ${cls || ""}`.trim();
+    }
+
+    function resetRoundVisuals() {
+      clearTimeout(waitTimer);
+      gameState = "ready";
+      setTarget("Start", "");
+      resultText.textContent = "Click Start, wait for green, then react.";
+      updateLabels();
+      positionTargetCenter();
+    }
+
+    function positionTargetRandom() {
+      const pad = 20;
+      const targetW = Math.min(170, arena.clientWidth - pad * 2);
+      const targetH = 56;
+
+      const maxX = Math.max(0, arena.clientWidth - targetW - pad);
+      const maxY = Math.max(0, arena.clientHeight - targetH - pad);
+
+      const x = Math.floor(Math.random() * maxX) + pad;
+      const y = Math.floor(Math.random() * maxY) + pad;
+
+      targetBtn.style.width = targetW + "px";
+      targetBtn.style.height = targetH + "px";
+      targetBtn.style.left = x + "px";
+      targetBtn.style.top = y + "px";
+      targetBtn.style.transform = "translate(0, 0)";
+    }
+
+    function positionTargetCenter() {
+      targetBtn.style.width = "";
+      targetBtn.style.height = "";
+      targetBtn.style.left = "50%";
+      targetBtn.style.top = "50%";
+      targetBtn.style.transform = "translate(-50%, -50%)";
+    }
+
+    function startRound() {
+      clearTimeout(waitTimer);
+      gameState = "waiting";
+      updateLabels();
+      setTarget("Wait...", "waiting");
+      resultText.textContent = "Get ready...";
+      positionTargetCenter();
+
+      const wait = Math.floor(Math.random() * 3000) + 1500;
+      waitTimer = setTimeout(() => {
+        gameState = "green";
+        updateLabels();
+        setTarget("CLICK NOW", "ready");
+        positionTargetRandom();
+        startTime = performance.now();
+        resultText.textContent = "Click the green button as fast as you can!";
+      }, wait);
+    }
+
+    function endRound(reactionTime) {
+      round += 1;
+      if (bestTime === null || reactionTime < bestTime) {
+        bestTime = reactionTime;
+      }
+      leaderboard.push({
+        time: reactionTime,
+        date: new Date().toLocaleDateString()
+      });
+      leaderboard.sort((a, b) => a.time - b.time);
+      leaderboard = leaderboard.slice(0, 5);
+      saveLeaderboard();
+      updateLabels();
+      renderLeaderboard();
+      resultText.textContent = `Nice! Your reaction time was ${reactionTime} ms.`;
+      setTarget("Start Again", "");
+      gameState = "ready";
+      positionTargetCenter();
+    }
+
+    targetBtn.addEventListener("click", () => {
+      if (gameState === "ready") {
+        startRound();
+        return;
+      }
+
+      if (gameState === "waiting") {
+        clearTimeout(waitTimer);
+        resultText.textContent = "Too early. Try again.";
+        setTarget("Too Soon", "waiting");
+        setTimeout(() => {
+          resetRoundVisuals();
+        }, 900);
+        return;
+      }
+
+      if (gameState === "green") {
+        const reactionTime = Math.round(performance.now() - startTime);
+        endRound(reactionTime);
+      }
+    });
+
+    playBtn.addEventListener("click", () => showScreen(gameScreen));
+    gameBtn.addEventListener("click", () => showScreen(gameScreen));
+    homeBtn.addEventListener("click", () => showScreen(homeScreen));
+    lbBtn.addEventListener("click", () => {
+      renderLeaderboard();
+      showScreen(leaderboardScreen);
+    });
+    backHomeBtn.addEventListener("click", () => showScreen(homeScreen));
+    backFromLbBtn.addEventListener("click", () => showScreen(homeScreen));
+    startRoundBtn.addEventListener("click", startRound);
+    resetBtn.addEventListener("click", () => {
+      round = 0;
+      bestTime = null;
+      resetRoundVisuals();
+      updateLabels();
+    });
+    clearLbBtn.addEventListener("click", () => {
+      leaderboard = [];
+      saveLeaderboard();
+      renderLeaderboard();
+    });
+
+    function saveLeaderboard() {
+      localStorage.setItem("reactionTestLeaderboard", JSON.stringify(leaderboard));
+    }
+
+    function loadLeaderboard() {
+      try {
+        const raw = localStorage.getItem("reactionTestLeaderboard");
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function renderLeaderboard() {
+      leaderboardList.innerHTML = "";
+
+      if (!leaderboard.length) {
+        leaderboardList.innerHTML = `<div class="lb-empty">No scores yet. Play a round to create one.</div>`;
+        return;
+      }
+
+      leaderboard.forEach((entry, index) => {
+        const item = document.createElement("div");
+        item.className = "lb-item";
+        item.innerHTML = `
+          <div>
+            <div class="name">#${index + 1}</div>
+            <div style="color: var(--muted); font-size: 0.9rem;">${entry.date}</div>
+          </div>
+          <div class="time">${entry.time} ms</div>
+        `;
+        leaderboardList.appendChild(item);
+      });
+    }
+
+    /* Particle background */
+    const canvas = document.getElementById("particles");
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initParticles();
+      positionTargetCenter();
+    }
+
+    function initParticles() {
+      const count = Math.min(120, Math.floor((canvas.width * canvas.height) / 14000));
+      particles = [];
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 1.8 + 0.3,
+          vx: (Math.random() - 0.5) * 0.35,
+          vy: (Math.random() - 0.5) * 0.35,
+          alpha: Math.random() * 0.6 + 0.2
+        });
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      requestAnimationFrame(animateParticles);
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+
+    resizeCanvas();
+    animateParticles();
+    resetRoundVisuals();
+    renderLeaderboard();
+  </script>
+</body>
+</html>
